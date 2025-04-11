@@ -10,18 +10,24 @@ export default function PhoneModel() {
    const neonPink = '#ff3cb4';
    const neonBlue = '#00e5ff';
    
-   // Create dark screen material with blue glow
+   // Create dark screen material with enhanced blue glow
    const screenMaterial = new MeshBasicMaterial({
      color: new Color('#000000'),
      transparent: true,
-     opacity: 0.95
+     opacity: 0.95,
+     emissive: new Color(neonBlue),
+     emissiveIntensity: 0.8
    });
+   
+   // Enhanced button outline with stronger glow
    const buttonOutlineMaterial = new MeshBasicMaterial({
-    color: neonBlue,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.8
-  });
+     color: neonBlue,
+     wireframe: true,
+     transparent: true,
+     opacity: 0.8,
+     emissive: new Color(neonBlue),
+     emissiveIntensity: 1.2
+   });
   // Center the phone and show the screen
   useEffect(() => {
     if (phoneRef.current) {
@@ -49,7 +55,7 @@ export default function PhoneModel() {
       <Text
         position={[0, 75, 5]}
         fontSize={5}
-        color={neonPink}
+        color={neonBlue}
         anchorX="center"
         anchorY="middle"
         background="#00000099"
@@ -59,9 +65,9 @@ export default function PhoneModel() {
         HELLO! I'M
       </Text>
       <Text
-        position={[0, 65, 5]}
+        position={[0, 68, 5]}
         fontSize={7}
-        color={neonPink}
+        color={neonBlue}
         anchorX="center"
         anchorY="middle"
         background="#00000099"
@@ -96,7 +102,7 @@ export default function PhoneModel() {
       </Text>
       <group position={[0, 35, 5]}>
         <Plane 
-          args={[20, 5]} 
+          args={[25, 7]} 
           material={buttonOutlineMaterial}
         />
         <Text
@@ -110,7 +116,7 @@ export default function PhoneModel() {
         </Text>
         <Plane
           position={[0, -10, 0.1]}
-          args={[20, 5]} 
+          args={[25, 7]} 
           material={buttonOutlineMaterial}
         />
         <Text
@@ -124,7 +130,7 @@ export default function PhoneModel() {
         </Text>
         <Plane
           position={[0, -20, 0.1]}
-          args={[25, 5]} 
+          args={[25, 7]} 
           material={buttonOutlineMaterial}
         />
         <Text
