@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import PhoneModel from './components/PhoneModel.tsx';
+import ThemeToggle from './components/ThemeToggle.tsx';
+import './styles/app.css';
+import './styles/themes.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [theme, setTheme] = useState<'cyberpunk' | 'white'>('cyberpunk');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className={`app ${theme}`}>
+      <ThemeToggle currentTheme={theme} setTheme={setTheme} />
+      
+      {/* Full-screen canvas as base layer */}
+      <div className="canvas-container">
+        <Canvas camera={{ position: [0, 0, 20], fov: 25 }}>
+          <ambientLight intensity={0.7} />
+          <directionalLight position={[5, 5, 5]} intensity={1} />
+          <spotLight 
+            position={[0, 0, 10]} 
+            angle={0.6} 
+            penumbra={0.5} 
+            intensity={1.5} 
+          />
+          
+          <OrbitControls 
+            enableZoom={true} 
+            maxDistance={30}
+            minDistance={10}
+            enablePan={true}
+            panSpeed={0.8}
+            target={[0, 1, 0]}
+          />
+          
+          <PhoneModel />
+        </Canvas>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

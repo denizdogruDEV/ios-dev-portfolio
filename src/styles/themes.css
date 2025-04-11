@@ -1,0 +1,9 @@
+.app.cyberpunk {
+    background: radial-gradient(#0f0c29, #302b63, #24243e);
+    color: white;
+  }
+  
+  .app.white {
+    background: white;
+    color: black;
+  }
