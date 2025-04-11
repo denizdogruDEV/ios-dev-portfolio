@@ -3,13 +3,12 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import PhoneModel from './components/PhoneModel.tsx';
-import ThemeToggle from './components/ThemeToggle.tsx';
 import './styles/app.css';
 import './styles/themes.css';
 import { Vector2 } from 'three';
 
 function App() {
-  const [theme, setTheme] = useState<'cyberpunk' | 'white'>('cyberpunk');
+  const [theme] = useState<'cyberpunk' | 'white'>('cyberpunk');
   
   return (
     <div className={`app ${theme}`}>

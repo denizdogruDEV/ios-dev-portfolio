@@ -1,33 +1,25 @@
 import { useRef, useEffect } from 'react';
 import { useGLTF, Text, Plane } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { MeshBasicMaterial, Color } from 'three';
+import { MeshBasicMaterial, Group } from 'three';
 
 export default function PhoneModel() {
   const { scene } = useGLTF('/iphone12pro.glb');
-  const phoneRef = useRef(null);
-   // Colors for cyberpunk theme
-   const neonPink = '#ff3cb4';
-   const neonBlue = '#00e5ff';
-   
-   // Create dark screen material with enhanced blue glow
-   const screenMaterial = new MeshBasicMaterial({
-     color: new Color('#000000'),
-     transparent: true,
-     opacity: 0.95,
-     emissive: new Color(neonBlue),
-     emissiveIntensity: 0.8
-   });
-   
-   // Enhanced button outline with stronger glow
-   const buttonOutlineMaterial = new MeshBasicMaterial({
-     color: neonBlue,
-     wireframe: true,
-     transparent: true,
-     opacity: 0.8,
-     emissive: new Color(neonBlue),
-     emissiveIntensity: 1.2
-   });
+  const phoneRef = useRef<Group>(null);
+  
+  // Colors for cyberpunk theme
+  const neonPink = '#ff3cb4';
+  const neonBlue = '#00e5ff';
+  
+  // Enhanced button outline with stronger glow
+  const buttonOutlineMaterial = new MeshBasicMaterial({
+    color: neonBlue,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.8
+    // Note: emissive is removed as it's not valid for MeshBasicMaterial
+  });
+
   // Center the phone and show the screen
   useEffect(() => {
     if (phoneRef.current) {
@@ -58,9 +50,11 @@ export default function PhoneModel() {
         color={neonBlue}
         anchorX="center"
         anchorY="middle"
-        background="#00000099"
-        padding={[8, 16]}
-        borderRadius={4}
+        // Using outlineColor and outlineWidth instead of background
+        outlineColor="#000000"
+        outlineOpacity={0.6}
+        outlineWidth={0.05}
+        // Removed padding
       >
         HELLO! I'M
       </Text>
@@ -70,9 +64,9 @@ export default function PhoneModel() {
         color={neonBlue}
         anchorX="center"
         anchorY="middle"
-        background="#00000099"
-        padding={[8, 16]}
-        borderRadius={4}
+        outlineColor="#000000"
+        outlineOpacity={0.6}
+        outlineWidth={0.05}
       >
         YIGIT SERIN
       </Text>
@@ -82,9 +76,9 @@ export default function PhoneModel() {
         color={neonPink}
         anchorX="center"
         anchorY="middle"
-        background="#00000099"
-        padding={[8, 16]}
-        borderRadius={4}
+        outlineColor="#000000"
+        outlineOpacity={0.6}
+        outlineWidth={0.05}
       >
         IOS DEVELOPER
       </Text>
@@ -94,9 +88,9 @@ export default function PhoneModel() {
         color={neonPink}
         anchorX="center"
         anchorY="middle"
-        background="#00000099"
-        padding={[8, 16]}
-        borderRadius={4}
+        outlineColor="#000000"
+        outlineOpacity={0.6}
+        outlineWidth={0.05}
       >
         BASED IN NETHERLANDS
       </Text>
