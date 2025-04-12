@@ -4,7 +4,8 @@ import { useFrame } from '@react-three/fiber';
 import { MeshBasicMaterial, Group } from 'three';
 
 export default function PhoneModel() {
-  const { scene } = useGLTF('/iphone12pro.glb');
+  const modelPath = `${import.meta.env.BASE_URL}iphone12pro.glb`;
+  const { scene } = useGLTF(modelPath);
   const phoneRef = useRef<Group>(null);
   
   // Colors for cyberpunk theme
