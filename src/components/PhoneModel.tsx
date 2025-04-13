@@ -1,27 +1,71 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useGLTF, Text, Plane } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import { MeshBasicMaterial, Group } from 'three';
+import { useFrame, useThree } from '@react-three/fiber';
+import { MeshBasicMaterial, Group, Color } from 'three';
 
-export default function PhoneModel() {
-  const modelPath = `${import.meta.env.BASE_URL}iphone12pro.glb`;
+  // Define the props type with timeOfDay
+interface PhoneModelProps {
+  timeOfDay?: number;
+  theme?: 'day' | 'sunset' | 'night';
+}
+
+export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneModelProps) {
+  // Determine if it's night time (for model selection)
+  const isNightTime = timeOfDay > 0.6 || timeOfDay < 0.2;
+  
+  // Select phone model based on time of day
+  const modelTheme = isNightTime ? 'black' : 'white';
+  const modelPath = `${import.meta.env.BASE_URL}iphone12pro-${modelTheme}.glb`;
+  
+  // Load the model
   const { scene } = useGLTF(modelPath);
   const phoneRef = useRef<Group>(null);
   
-  // Colors for cyberpunk theme
-  const neonPink = '#ff3cb4';
-  const neonBlue = '#00e5ff';
+  // For screen glowing effect
+  const screenRef = useRef<any>(null);
   
-  // Enhanced button outline with stronger glow
+  // Get scene state for more advanced animations
+  const { clock } = useThree();
+  
+  // Colors based on selected theme
+  const getThemeColors = () => {
+    switch(theme) {
+      case 'sunset':
+        return {
+          primary: '#ff7e5f',
+          secondary: '#feb47b',
+          accent: '#ffcc00'
+        };
+      case 'night':
+        return {
+          primary: '#08f7fe',
+          secondary: '#09fbd3',
+          accent: '#fe53bb'
+        };
+      case 'day':
+      default:
+        return {
+          primary: '#333333',
+          secondary: '#666666',
+          accent: '#888888'
+        };
+    }
+  };
+  
+  const colors = getThemeColors();
+  
+  // Create materials for UI elements
   const buttonOutlineMaterial = new MeshBasicMaterial({
-    color: neonBlue,
+    color: colors.secondary,
     wireframe: true,
     transparent: true,
     opacity: 0.8
-    // Note: emissive is removed as it's not valid for MeshBasicMaterial
   });
-
-  // Center the phone and show the screen
+  
+  // For animated hover effect on buttons
+  const [hoveredButton, setHoveredButton] = useState<number | null>(null);
+  
+  // Center the phone and setup the model
   useEffect(() => {
     if (phoneRef.current) {
       // Rotate to show the screen (front) of the phone
@@ -29,16 +73,49 @@ export default function PhoneModel() {
       
       // Make sure position is centered and slightly lower
       phoneRef.current.position.set(0, -3, 0);
+      
+      // Find the screen mesh to add glow effect
+      scene.traverse((child: any) => {
+        if (child.isMesh && child.name.includes('screen')) {
+          screenRef.current = child;
+        }
+      });
     }
-  }, []);
+  }, [scene]);
   
-  // Add subtle rotation animation that maintains the front view
+  // Dynamic animations
   useFrame((state) => {
     if (phoneRef.current) {
-      // Very slight rotation that keeps the screen visible
-      phoneRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.2) * 1;
+      // Smooth rotation that keeps the screen visible
+      phoneRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.2) * 0.8;
+      
+      // Add subtle floating movement
+      phoneRef.current.position.y = -3 + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.3;
+      
+      // Make screen glow effect pulse based on time
+      if (screenRef.current && isNightTime) {
+        const intensity = Math.sin(state.clock.getElapsedTime() * 2) * 0.15 + 0.85;
+        screenRef.current.material.emissive = new Color(colors.secondary);
+        screenRef.current.material.emissiveIntensity = intensity;
+      }
     }
   });
+  
+  // Button hover animation parameters
+  const getButtonScale = (index: number) => {
+    return hoveredButton === index ? 1.1 : 1.0;
+  };
+  
+  const getButtonColor = (index: number) => {
+    return hoveredButton === index ? colors.accent : colors.secondary;
+  };
+  
+  // Button data
+  const buttons = [
+    { label: "PROFILE", position: [0, 0, 0.1] },
+    { label: "WORKS", position: [0, 0, 0.1] },
+    { label: "CONTACT", position: [0, 0, 0.1] }
+  ];
   
   return (
     <group ref={phoneRef} scale={0.08}>
@@ -48,21 +125,19 @@ export default function PhoneModel() {
       <Text
         position={[0, 75, 5]}
         fontSize={5}
-        color={neonBlue}
+        color={colors.secondary}
         anchorX="center"
         anchorY="middle"
-        // Using outlineColor and outlineWidth instead of background
         outlineColor="#000000"
         outlineOpacity={0.6}
         outlineWidth={0.05}
-        // Removed padding
       >
         HELLO! I'M
       </Text>
       <Text
         position={[0, 68, 5]}
         fontSize={7}
-        color={neonBlue}
+        color={colors.secondary}
         anchorX="center"
         anchorY="middle"
         outlineColor="#000000"
@@ -72,9 +147,9 @@ export default function PhoneModel() {
         YIGIT SERIN
       </Text>
       <Text
-        position={[0, 50, 5]}
+        position={[1, 50, 5]}
         fontSize={5}
-        color={neonPink}
+        color={colors.primary}
         anchorX="center"
         anchorY="middle"
         outlineColor="#000000"
@@ -84,9 +159,9 @@ export default function PhoneModel() {
         IOS DEVELOPER
       </Text>
       <Text
-        position={[0, 45, 5]}
+        position={[1.5, 45, 5]}
         fontSize={3}
-        color={neonPink}
+        color={colors.primary}
         anchorX="center"
         anchorY="middle"
         outlineColor="#000000"
@@ -95,49 +170,62 @@ export default function PhoneModel() {
       >
         BASED IN NETHERLANDS
       </Text>
+      
+      {/* Interactive buttons */}
       <group position={[0, 35, 5]}>
-        <Plane 
-          args={[25, 7]} 
-          material={buttonOutlineMaterial}
-        />
-        <Text
-          position={[0, 0, 0.1]}
-          fontSize={5}
-          color={neonBlue}
-          anchorX="center"
-          anchorY="middle"
-        >
-          PROFILE
-        </Text>
-        <Plane
-          position={[0, -10, 0.1]}
-          args={[25, 7]} 
-          material={buttonOutlineMaterial}
-        />
-        <Text
-          position={[0, -10, 0.1]}
-          fontSize={5}
-          color={neonBlue}
-          anchorX="center"
-          anchorY="middle"
-        >
-          WORKS
-        </Text>
-        <Plane
-          position={[0, -20, 0.1]}
-          args={[25, 7]} 
-          material={buttonOutlineMaterial}
-        />
-        <Text
-          position={[0, -20, 0.1]}
-          fontSize={5}
-          color={neonBlue}
-          anchorX="center"
-          anchorY="middle"
-        >
-          CONTACT
-        </Text>
+        {buttons.map((button, index) => (
+          <group 
+            key={index} 
+            position={[0, -10 * index, 0]}
+            scale={[getButtonScale(index), getButtonScale(index), 1]}
+            onPointerOver={() => setHoveredButton(index)}
+            onPointerOut={() => setHoveredButton(null)}
+          >
+            <Plane 
+              args={[25, 7]} 
+              material={buttonOutlineMaterial.clone()}
+              position={[0, 0, 0]}
+            >
+              {/* We need to modify the material for each button */}
+              <meshBasicMaterial 
+                attach="material" 
+                color={getButtonColor(index)} 
+                wireframe={true} 
+                transparent={true} 
+                opacity={0.8} 
+              />
+            </Plane>
+            <Text
+              position={button.position}
+              fontSize={5}
+              color={getButtonColor(index)}
+              anchorX="center"
+              anchorY="middle"
+            >
+              {button.label}
+            </Text>
+          </group>
+        ))}
       </group>
+      
+      {/* Add floating particles around the phone for night mode */}
+      {isNightTime && Array.from({ length: 20 }).map((_, i) => (
+        <mesh 
+          key={i}
+          position={[
+            Math.sin(i * 0.5) * 15,
+            Math.cos(i * 0.3) * 20,
+            Math.sin(i * 0.7) * 5
+          ]}
+        >
+          <sphereGeometry args={[0.2, 8, 8]} />
+          <meshBasicMaterial 
+            color={i % 2 === 0 ? colors.primary : colors.secondary} 
+            transparent 
+            opacity={0.8} 
+          />
+        </mesh>
+      ))}
     </group>
   );
 }
