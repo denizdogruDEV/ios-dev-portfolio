@@ -2,10 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sky, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
-import PhoneModel from './components/PhoneModel.tsx';
+import PhoneModel from './components/PhoneModel';
 import './styles/app.css';
 import './styles/themes.css';
 import { Vector2 } from 'three';
+
+// Define theme type for TypeScript
+type Theme = 'day' | 'sunset' | 'night';
 
 function App() {
   // Auto-cycling time of day (0: dawn, 0.3: day, 0.5: sunset, 0.8: night)
@@ -14,13 +17,13 @@ function App() {
   const lastUpdateTime = useRef(Date.now());
   
   // Automatically determine theme based on time of day
-  const getThemeFromTime = (time) => {
+  const getThemeFromTime = (time: number): Theme => {
     if (time > 0.4 && time < 0.6) return 'sunset';
     if (time > 0.6 || time < 0.2) return 'night';
     return 'day';
   };
   
-  const [theme, setTheme] = useState(getThemeFromTime(timeOfDay));
+  const [theme, setTheme] = useState<Theme>(getThemeFromTime(timeOfDay));
   
   // Auto-cycle through time of day
   useEffect(() => {
@@ -78,7 +81,7 @@ function App() {
   }, [theme]);
 
   // Calculate sun position based on time of day
-  const calculateSunPosition = () => {
+  const calculateSunPosition = (): [number, number, number] => {
     const angle = timeOfDay * Math.PI * 2;
     const radius = 100;
     return [
@@ -104,6 +107,8 @@ function App() {
 
   // Calculate sky parameters based on time of day
   const getSkyParams = () => {
+    const sunPosition = calculateSunPosition();
+    
     if (timeOfDay > 0.4 && timeOfDay < 0.6) {
       // Sunset
       return {
@@ -111,7 +116,7 @@ function App() {
         rayleigh: 3,
         mieCoefficient: 0.035,
         mieDirectionalG: 0.8,
-        sunPosition: calculateSunPosition()
+        sunPosition
       };
     } else if (isNightTime) {
       // Night
@@ -120,7 +125,7 @@ function App() {
         rayleigh: 0.5,
         mieCoefficient: 0.01,
         mieDirectionalG: 0.95,
-        sunPosition: calculateSunPosition()
+        sunPosition
       };
     } else {
       // Day
@@ -129,7 +134,7 @@ function App() {
         rayleigh: 2,
         mieCoefficient: 0.005,
         mieDirectionalG: 0.8,
-        sunPosition: calculateSunPosition()
+        sunPosition
       };
     }
   };

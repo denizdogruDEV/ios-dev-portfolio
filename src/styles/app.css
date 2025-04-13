@@ -1,48 +1,13 @@
-/* Simplified layout focused on centering */
-
-body, html {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.app {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-}
-
-.canvas-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-}
-
-/* Theme toggle styles */
-.theme-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
-}
-
-/* app.css */
+/* CSS Variables for theming */
 :root {
-  --primary-color: #ff2a6d;
-  --secondary-color: #05d9e8;
-  --accent-color: #d1f7ff;
-  --background-color: #010a13;
+  --primary-color: #333333;
+  --secondary-color: #666666;
+  --accent-color: #888888;
+  --background-color: #f0f0f0;
 }
 
-body {
+/* Base styles */
+body, html {
   margin: 0;
   padding: 0;
   font-family: 'Rajdhani', 'Orbitron', sans-serif;
@@ -51,6 +16,7 @@ body {
   overflow: hidden;
 }
 
+/* Layout structure */
 .app {
   position: relative;
   width: 100vw;
@@ -65,6 +31,28 @@ body {
   width: 100%;
   height: 100%;
   z-index: 1;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* Time indicator */
+.time-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.5s ease;
+  opacity: 0.5;
 }
 
 /* Controls */
@@ -92,7 +80,8 @@ body {
   font-size: 14px;
 }
 
-.theme-selector button:hover, .theme-selector button.active {
+.theme-selector button:hover, 
+.theme-selector button.active {
   background-color: var(--primary-color);
   color: #000;
   box-shadow: 0 0 10px var(--primary-color);
@@ -190,134 +179,6 @@ body {
 }
 
 /* Theme-specific styles */
-.cyberpunk {
-  --glow-color: var(--primary-color);
-}
-
-.sunset {
-  --glow-color: var(--secondary-color);
-}
-
-.night {
-  --glow-color: var(--primary-color);
-}
-
-/* app.css */
-:root {
-  --primary-color: #333333;
-  --secondary-color: #666666;
-  --accent-color: #888888;
-  --background-color: #f0f0f0;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Rajdhani', 'Orbitron', sans-serif;
-  background-color: var(--background-color);
-  color: var(--accent-color);
-  overflow: hidden;
-}
-
-.app {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-}
-
-.canvas-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-/* Time indicator - subtle display in corner */
-.time-indicator {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
-  background-color: rgba(0, 0, 0, 0.3);
-  color: rgba(255, 255, 255, 0.7);
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-family: 'Orbitron', sans-serif;
-  transition: all 0.5s ease;
-  opacity: 0.5;
-}
-
-/* Grid overlay */
-.grid-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(0deg, transparent 24%, rgba(5, 217, 232, 0.1) 25%, rgba(5, 217, 232, 0.1) 26%, transparent 27%, transparent 74%, rgba(5, 217, 232, 0.1) 75%, rgba(5, 217, 232, 0.1) 76%, transparent 77%, transparent),
-  linear-gradient(90deg, transparent 24%, rgba(5, 217, 232, 0.1) 25%, rgba(5, 217, 232, 0.1) 26%, transparent 27%, transparent 74%, rgba(5, 217, 232, 0.1) 75%, rgba(5, 217, 232, 0.1) 76%, transparent 77%, transparent);
-  background-size: 50px 50px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.grid-overlay.sunset {
-  background-image: linear-gradient(0deg, transparent 24%, rgba(255, 126, 95, 0.1) 25%, rgba(255, 126, 95, 0.1) 26%, transparent 27%, transparent 74%, rgba(255, 126, 95, 0.1) 75%, rgba(255, 126, 95, 0.1) 76%, transparent 77%, transparent),
-  linear-gradient(90deg, transparent 24%, rgba(255, 126, 95, 0.1) 25%, rgba(255, 126, 95, 0.1) 26%, transparent 27%, transparent 74%, rgba(255, 126, 95, 0.1) 75%, rgba(255, 126, 95, 0.1) 76%, transparent 77%, transparent);
-}
-
-.grid-overlay.night {
-  background-image: linear-gradient(0deg, transparent 24%, rgba(8, 247, 254, 0.1) 25%, rgba(8, 247, 254, 0.1) 26%, transparent 27%, transparent 74%, rgba(8, 247, 254, 0.1) 75%, rgba(8, 247, 254, 0.1) 76%, transparent 77%, transparent),
-  linear-gradient(90deg, transparent 24%, rgba(8, 247, 254, 0.1) 25%, rgba(8, 247, 254, 0.1) 26%, transparent 27%, transparent 74%, rgba(8, 247, 254, 0.1) 75%, rgba(8, 247, 254, 0.1) 76%, transparent 77%, transparent);
-}
-
-/* Scanlines effect */
-.scanlines {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.scanlines:before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 50%,
-    rgba(0, 0, 0, 0.3) 50%
-  );
-  background-size: 100% 4px;
-  animation: scanlines 0.5s linear infinite;
-  opacity: 0.3;
-}
-
-@keyframes scanlines {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 4px;
-  }
-}
-
-/* Theme-specific styles */
-.cyberpunk {
-  --glow-color: var(--primary-color);
-}
-
 .sunset {
   --glow-color: var(--secondary-color);
 }

@@ -1,12 +1,17 @@
 import { useRef, useEffect, useState } from 'react';
 import { useGLTF, Text, Plane } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
-import { MeshBasicMaterial, Group, Color } from 'three';
+import { useFrame } from '@react-three/fiber';
+import { MeshBasicMaterial, Group, Color, Mesh, MeshStandardMaterial } from 'three';
 
-  // Define the props type with timeOfDay
+// Define the props type with timeOfDay
 interface PhoneModelProps {
   timeOfDay?: number;
   theme?: 'day' | 'sunset' | 'night';
+}
+
+interface ButtonData {
+  label: string;
+  position: [number, number, number];
 }
 
 export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneModelProps) {
@@ -22,10 +27,7 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
   const phoneRef = useRef<Group>(null);
   
   // For screen glowing effect
-  const screenRef = useRef<any>(null);
-  
-  // Get scene state for more advanced animations
-  const { clock } = useThree();
+  const screenRef = useRef<Mesh<any, MeshStandardMaterial> | null>(null);
   
   // Colors based on selected theme
   const getThemeColors = () => {
@@ -77,7 +79,21 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
       // Find the screen mesh to add glow effect
       scene.traverse((child: any) => {
         if (child.isMesh && child.name.includes('screen')) {
-          screenRef.current = child;
+          // Make sure the material is a MeshStandardMaterial for emissive properties
+          if (child.material && !Array.isArray(child.material)) {
+            // If it's not already a MeshStandardMaterial, create one
+            if (!(child.material instanceof MeshStandardMaterial)) {
+              const oldMaterial = child.material;
+              const newMaterial = new MeshStandardMaterial({
+                color: oldMaterial.color,
+                map: oldMaterial.map,
+                transparent: oldMaterial.transparent,
+                opacity: oldMaterial.opacity
+              });
+              child.material = newMaterial;
+            }
+            screenRef.current = child as Mesh<any, MeshStandardMaterial>;
+          }
         }
       });
     }
@@ -110,8 +126,8 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
     return hoveredButton === index ? colors.accent : colors.secondary;
   };
   
-  // Button data
-  const buttons = [
+  // Button data with explicitly typed positions
+  const buttons: ButtonData[] = [
     { label: "PROFILE", position: [0, 0, 0.1] },
     { label: "WORKS", position: [0, 0, 0.1] },
     { label: "CONTACT", position: [0, 0, 0.1] }
