@@ -1,67 +1,28 @@
 import { useRef, useEffect, useState } from 'react';
 import { useGLTF, Text, Plane } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { MeshBasicMaterial, Group, Color, Mesh, MeshStandardMaterial } from 'three';
-
-// Define the props type with timeOfDay
-interface PhoneModelProps {
-  timeOfDay?: number;
-  theme?: 'day' | 'sunset' | 'night';
-}
+import { MeshBasicMaterial, Group, Color, Mesh, MeshStandardMaterial, Shape, ExtrudeGeometry } from 'three';
+import { colors } from '../styles/theme';
 
 interface ButtonData {
   label: string;
   position: [number, number, number];
 }
 
-export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneModelProps) {
-  // Determine if it's night time (for model selection)
-  const isNightTime = timeOfDay > 0.6 || timeOfDay < 0.2;
-  
-  // Select phone model based on time of day
-  const modelTheme = isNightTime ? 'black' : 'white';
-  const modelPath = `${import.meta.env.BASE_URL}iphone12pro-${modelTheme}.glb`;
-  
+export default function PhoneModel() {
   // Load the model
-  const { scene } = useGLTF(modelPath);
+  const { scene } = useGLTF(`${import.meta.env.BASE_URL}iphone12pro-white.glb`);
   const phoneRef = useRef<Group>(null);
   
   // For screen glowing effect
   const screenRef = useRef<Mesh<any, MeshStandardMaterial> | null>(null);
-  
-  // Colors based on selected theme
-  const getThemeColors = () => {
-    switch(theme) {
-      case 'sunset':
-        return {
-          primary: '#ff7e5f',
-          secondary: '#feb47b',
-          accent: '#ffcc00'
-        };
-      case 'night':
-        return {
-          primary: '#08f7fe',
-          secondary: '#09fbd3',
-          accent: '#fe53bb'
-        };
-      case 'day':
-      default:
-        return {
-          primary: '#333333',
-          secondary: '#666666',
-          accent: '#888888'
-        };
-    }
-  };
-  
-  const colors = getThemeColors();
   
   // Create materials for UI elements
   const buttonOutlineMaterial = new MeshBasicMaterial({
     color: colors.secondary,
     wireframe: true,
     transparent: true,
-    opacity: 0.8
+    opacity: 0.6
   });
   
   // For animated hover effect on buttons
@@ -78,7 +39,7 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
       
       // Find the screen mesh to add glow effect
       scene.traverse((child: any) => {
-        if (child.isMesh && child.name.includes('screen')) {
+        if (child.isMesh) {
           // Make sure the material is a MeshStandardMaterial for emissive properties
           if (child.material && !Array.isArray(child.material)) {
             // If it's not already a MeshStandardMaterial, create one
@@ -87,12 +48,18 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
               const newMaterial = new MeshStandardMaterial({
                 color: oldMaterial.color,
                 map: oldMaterial.map,
-                transparent: oldMaterial.transparent,
-                opacity: oldMaterial.opacity
+                transparent: false,  // Ensure phone model is not transparent
+                opacity: 1.0,        // Ensure full opacity
+                roughness: 0.5,      // Add some roughness for better material appearance
+                metalness: 0.8       // Add some metalness for better material appearance
               });
               child.material = newMaterial;
             }
-            screenRef.current = child as Mesh<any, MeshStandardMaterial>;
+            
+            // Only set screenRef for the screen mesh
+            if (child.name.includes('screen')) {
+              screenRef.current = child as Mesh<any, MeshStandardMaterial>;
+            }
           }
         }
       });
@@ -107,13 +74,6 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
       
       // Add subtle floating movement
       phoneRef.current.position.y = -3 + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.3;
-      
-      // Make screen glow effect pulse based on time
-      if (screenRef.current && isNightTime) {
-        const intensity = Math.sin(state.clock.getElapsedTime() * 2) * 0.15 + 0.85;
-        screenRef.current.material.emissive = new Color(colors.secondary);
-        screenRef.current.material.emissiveIntensity = intensity;
-      }
     }
   });
   
@@ -124,6 +84,46 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
   
   const getButtonColor = (index: number) => {
     return hoveredButton === index ? colors.accent : colors.secondary;
+  };
+  
+  // Create rounded rectangle shape for buttons
+  const createRoundedRectShape = (width: number, height: number, radius: number) => {
+    const shape = new Shape();
+    const x = -width / 2;
+    const y = -height / 2;
+
+    shape.moveTo(x + radius, y);
+    shape.lineTo(x + width - radius, y);
+    shape.quadraticCurveTo(x + width, y, x + width, y + radius);
+    shape.lineTo(x + width, y + height - radius);
+    shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    shape.lineTo(x + radius, y + height);
+    shape.quadraticCurveTo(x, y + height, x, y + height - radius);
+    shape.lineTo(x, y + radius);
+    shape.quadraticCurveTo(x, y, x + radius, y);
+
+    return shape;
+  };
+
+  // Create a geometry for rounded rectangle buttons
+  const createButtonGeometry = (width: number, height: number, radius: number) => {
+    const shape = createRoundedRectShape(width, height, radius);
+    const geometry = new ExtrudeGeometry(shape, {
+      depth: 0.2,
+      bevelEnabled: false
+    });
+    return geometry;
+  };
+
+  // Create a new material for each button to allow individual color changes
+  const createButtonMaterial = (index: number) => {
+    const color = getButtonColor(index);
+    return new MeshBasicMaterial({
+      color: color,
+      wireframe: false,
+      transparent: true,
+      opacity: hoveredButton === index ? 0.3 : 0.15  // Lower base opacity, higher on hover
+    });
   };
   
   // Button data with explicitly typed positions
@@ -137,16 +137,16 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
     <group ref={phoneRef} scale={0.08}>
       <primitive object={scene} />
       
-      {/* 3D Text that will move with the phone model */}
+      {/* 3D Text with neon effect */}
       <Text
         position={[0, 75, 5]}
         fontSize={5}
-        color={colors.secondary}
+        color={colors.primary}
         anchorX="center"
         anchorY="middle"
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        outlineWidth={0.05}
+        outlineColor={colors.secondary}
+        outlineOpacity={0.4}
+        outlineWidth={0.01}
       >
         HELLO! I'M
       </Text>
@@ -156,91 +156,62 @@ export default function PhoneModel({ timeOfDay = 0.3, theme = 'day' }: PhoneMode
         color={colors.secondary}
         anchorX="center"
         anchorY="middle"
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        outlineWidth={0.05}
+        outlineColor={colors.primary}
+        outlineOpacity={0.3}
+        outlineWidth={0.008}
       >
         YIGIT SERIN
       </Text>
       <Text
-        position={[1, 50, 5]}
+        position={[0, 50, 5]}
         fontSize={5}
-        color={colors.primary}
+        color={colors.accent}
         anchorX="center"
         anchorY="middle"
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        outlineWidth={0.05}
+        outlineColor={colors.secondary}
+        outlineOpacity={0.4}
+        outlineWidth={0.01}
       >
         IOS DEVELOPER
       </Text>
       <Text
-        position={[1.5, 45, 5]}
+        position={[0, 45, 5]}
         fontSize={3}
         color={colors.primary}
         anchorX="center"
         anchorY="middle"
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        outlineWidth={0.05}
+        outlineColor={colors.secondary}
+        outlineOpacity={0.4}
+        outlineWidth={0.01}
       >
         BASED IN NETHERLANDS
       </Text>
       
-      {/* Interactive buttons */}
-      <group position={[0, 35, 5]}>
-        {buttons.map((button, index) => (
-          <group 
-            key={index} 
-            position={[0, -10 * index, 0]}
-            scale={[getButtonScale(index), getButtonScale(index), 1]}
-            onPointerOver={() => setHoveredButton(index)}
-            onPointerOut={() => setHoveredButton(null)}
-          >
-            <Plane 
-              args={[25, 7]} 
-              material={buttonOutlineMaterial.clone()}
-              position={[0, 0, 0]}
-            >
-              {/* We need to modify the material for each button */}
-              <meshBasicMaterial 
-                attach="material" 
-                color={getButtonColor(index)} 
-                wireframe={true} 
-                transparent={true} 
-                opacity={0.8} 
-              />
-            </Plane>
-            <Text
-              position={button.position}
-              fontSize={5}
-              color={getButtonColor(index)}
-              anchorX="center"
-              anchorY="middle"
-            >
-              {button.label}
-            </Text>
-          </group>
-        ))}
-      </group>
-      
-      {/* Add floating particles around the phone for night mode */}
-      {isNightTime && Array.from({ length: 20 }).map((_, i) => (
-        <mesh 
-          key={i}
-          position={[
-            Math.sin(i * 0.5) * 15,
-            Math.cos(i * 0.3) * 20,
-            Math.sin(i * 0.7) * 5
-          ]}
+      {/* Interactive buttons with neon effect */}
+      {buttons.map((button, index) => (
+        <group 
+          key={index} 
+          position={[0, 35 - (index * 10), 5]}
+          scale={[getButtonScale(index), getButtonScale(index), 1]}
+          onPointerOver={() => setHoveredButton(index)}
+          onPointerOut={() => setHoveredButton(null)}
         >
-          <sphereGeometry args={[0.2, 8, 8]} />
-          <meshBasicMaterial 
-            color={i % 2 === 0 ? colors.primary : colors.secondary} 
-            transparent 
-            opacity={0.8} 
-          />
-        </mesh>
+          <mesh geometry={createButtonGeometry(25, 7, 1.5)}>
+            <primitive object={createButtonMaterial(index)} attach="material" />
+          </mesh>
+          <Text
+            position={button.position}
+            fontSize={5}
+            color={getButtonColor(index)}
+            anchorX="center"
+            anchorY="middle"
+            outlineColor={colors.primary}
+            outlineOpacity={0.3}
+            outlineWidth={0.008}
+          >
+            {button.label}
+          </Text>
+        </group>
       ))}
     </group>
   );
