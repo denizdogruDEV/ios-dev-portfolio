@@ -8,10 +8,13 @@ import './styles/fonts.css';
 import { Vector2 } from 'three';
 
 function App() {
+  // TODO: Fix typing when proper types are available
+  const orbitControlsRef = useRef<any>(null);
+
   return (
     <div className="app">
       <div className="canvas-container">
-        <Canvas camera={{ position: [0, 0, 30], fov: 20 }}>
+        <Canvas camera={{ position: [0, 0, 30], fov: 35 }}>
           {/* Scene background */}
           <color attach="background" args={["#000222"]} />
           
@@ -44,6 +47,7 @@ function App() {
           />
           
           <OrbitControls
+            ref={orbitControlsRef}
             enableZoom={true}
             maxDistance={40}
             minDistance={15}
@@ -54,7 +58,7 @@ function App() {
             autoRotateSpeed={0.5}
           />
           
-          <PhoneModel />
+          <PhoneModel orbitControlsRef={orbitControlsRef} />
           
           <EffectComposer>
             <Bloom 

@@ -1,15 +1,16 @@
 import { useRef, useEffect, useState } from 'react';
 import { useGLTF, Text, Plane } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import { MeshBasicMaterial, Group, Color, Mesh, MeshStandardMaterial, Shape, ExtrudeGeometry } from 'three';
+import { useFrame, useThree } from '@react-three/fiber';
+import { MeshBasicMaterial, Group, Color, Mesh, MeshStandardMaterial, Shape, ExtrudeGeometry, Vector3 } from 'three';
 import { colors } from '../styles/theme';
+import gsap from 'gsap';
 
 interface ButtonData {
   label: string;
   position: [number, number, number];
 }
 
-export default function PhoneModel() {
+export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any }) {
   // Load the model
   const { scene } = useGLTF(`${import.meta.env.BASE_URL}iphone12pro-white.glb`);
   const phoneRef = useRef<Group>(null);
@@ -27,7 +28,12 @@ export default function PhoneModel() {
   
   // For animated hover effect on buttons
   const [hoveredButton, setHoveredButton] = useState<number | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
   
+  // Get camera
+  const { camera } = useThree();
+
   // Center the phone and setup the model
   useEffect(() => {
     if (phoneRef.current) {
@@ -66,13 +72,50 @@ export default function PhoneModel() {
     }
   }, [scene]);
   
+  // Function to handle button click
+  const handleButtonClick = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+
+    const targetPosition = new Vector3(0, 0, isZoomedIn ? 30 : 15);
+    const targetRotation = new Vector3(0, 0, 0);
+
+    // Animate camera position and rotation
+    gsap.to(camera.position, {
+      x: targetPosition.x,
+      y: targetPosition.y,
+      z: targetPosition.z,
+      duration: 1.5,
+      ease: "power2.inOut",
+      onComplete: () => {
+        setIsAnimating(false);
+        setIsZoomedIn(!isZoomedIn);
+      }
+    });
+
+    // Animate phone rotation
+    if (phoneRef.current) {
+      gsap.to(phoneRef.current.rotation, {
+        x: targetRotation.x,
+        y: targetRotation.y,
+        z: targetRotation.z,
+        duration: 1.5,
+        ease: "power2.inOut"
+      });
+    }
+
+    // Disable/Enable controls
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.autoRotate = isZoomedIn;
+      orbitControlsRef.current.enabled = isZoomedIn;
+    }
+  };
+
   // Dynamic animations
   useFrame((state) => {
-    if (phoneRef.current) {
-      // Smooth rotation that keeps the screen visible
+    if (phoneRef.current && !isZoomedIn && !isAnimating) {
+      // Only apply floating and rotation animations when not zoomed in
       phoneRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.2) * 0.8;
-      
-      // Add subtle floating movement
       phoneRef.current.position.y = -3 + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.3;
     }
   });
@@ -195,6 +238,7 @@ export default function PhoneModel() {
           scale={[getButtonScale(index), getButtonScale(index), 1]}
           onPointerOver={() => setHoveredButton(index)}
           onPointerOut={() => setHoveredButton(null)}
+          onClick={handleButtonClick}
         >
           <mesh geometry={createButtonGeometry(25, 7, 1.5)}>
             <primitive object={createButtonMaterial(index)} attach="material" />
