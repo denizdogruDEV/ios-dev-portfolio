@@ -10,7 +10,12 @@ interface ButtonData {
   position: [number, number, number];
 }
 
-export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any }) {
+interface PhoneModelProps {
+  orbitControlsRef: any;
+  onPageChange: (index: number | null) => void;
+}
+
+export default function PhoneModel({ orbitControlsRef, onPageChange }: PhoneModelProps) {
   // Load the model
   const { scene } = useGLTF(`${import.meta.env.BASE_URL}iphone12pro-white.glb`);
   const phoneRef = useRef<Group>(null);
@@ -72,13 +77,25 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
     }
   }, [scene]);
   
+  // Button data
+  const buttons: ButtonData[] = [
+    { label: "PROFILE", position: [0, 0, 0.1] },
+    { label: "WORKS", position: [0, 0, 0.1] },
+    { label: "CONTACT", position: [0, 0, 0.1] }
+  ];
+
   // Function to handle button click
-  const handleButtonClick = () => {
+  const handleButtonClick = (index: number) => {
     if (isAnimating) return;
     setIsAnimating(true);
 
     const targetPosition = new Vector3(0, 0, isZoomedIn ? 30 : 15);
     const targetRotation = new Vector3(0, 0, 0);
+
+    // If zooming in, show content page
+    if (!isZoomedIn) {
+      onPageChange(index);
+    }
 
     // Animate camera position and rotation
     gsap.to(camera.position, {
@@ -90,6 +107,11 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
       onComplete: () => {
         setIsAnimating(false);
         setIsZoomedIn(!isZoomedIn);
+        
+        // If zooming out, hide content page
+        if (isZoomedIn) {
+          onPageChange(null);
+        }
       }
     });
 
@@ -169,13 +191,6 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
     });
   };
   
-  // Button data with explicitly typed positions
-  const buttons: ButtonData[] = [
-    { label: "PROFILE", position: [0, 0, 0.1] },
-    { label: "WORKS", position: [0, 0, 0.1] },
-    { label: "CONTACT", position: [0, 0, 0.1] }
-  ];
-  
   return (
     <group ref={phoneRef} scale={0.08}>
       <primitive object={scene} />
@@ -188,8 +203,8 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
         anchorX="center"
         anchorY="middle"
         outlineColor={colors.secondary}
-        outlineOpacity={0.4}
-        outlineWidth={0.01}
+        outlineOpacity={0.3}
+        outlineWidth={0.008}
       >
         HELLO! I'M
       </Text>
@@ -212,8 +227,8 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
         anchorX="center"
         anchorY="middle"
         outlineColor={colors.secondary}
-        outlineOpacity={0.4}
-        outlineWidth={0.01}
+        outlineOpacity={0.3}
+        outlineWidth={0.008}
       >
         IOS DEVELOPER
       </Text>
@@ -224,8 +239,8 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
         anchorX="center"
         anchorY="middle"
         outlineColor={colors.secondary}
-        outlineOpacity={0.4}
-        outlineWidth={0.01}
+        outlineOpacity={0.3}
+        outlineWidth={0.008}
       >
         BASED IN NETHERLANDS
       </Text>
@@ -238,7 +253,7 @@ export default function PhoneModel({ orbitControlsRef }: { orbitControlsRef: any
           scale={[getButtonScale(index), getButtonScale(index), 1]}
           onPointerOver={() => setHoveredButton(index)}
           onPointerOut={() => setHoveredButton(null)}
-          onClick={handleButtonClick}
+          onClick={() => handleButtonClick(index)}
         >
           <mesh geometry={createButtonGeometry(25, 7, 1.5)}>
             <primitive object={createButtonMaterial(index)} attach="material" />

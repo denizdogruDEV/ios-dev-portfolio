@@ -1,15 +1,32 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import PhoneModel from './components/PhoneModel';
+import ContentPage from './components/ContentPage';
 import './styles/app.css';
 import './styles/fonts.css';
 import { Vector2 } from 'three';
 
+// Content data for each button
+const pageContents = [
+  {
+    title: "About Me",
+    content: "I'm a passionate iOS developer with expertise in Swift, SwiftUI, and UIKit. I love creating beautiful and functional mobile experiences."
+  },
+  {
+    title: "My Projects",
+    content: "Explore my portfolio of iOS applications, from consumer apps to enterprise solutions. Each project demonstrates my commitment to quality and user experience."
+  },
+  {
+    title: "Get in Touch",
+    content: "Let's work together! Reach out to discuss your project ideas or potential collaborations."
+  }
+];
+
 function App() {
-  // TODO: Fix typing when proper types are available
   const orbitControlsRef = useRef<any>(null);
+  const [activePageIndex, setActivePageIndex] = useState<number | null>(null);
 
   return (
     <div className="app">
@@ -58,7 +75,20 @@ function App() {
             autoRotateSpeed={0.5}
           />
           
-          <PhoneModel orbitControlsRef={orbitControlsRef} />
+          <PhoneModel 
+            orbitControlsRef={orbitControlsRef}
+            onPageChange={setActivePageIndex}
+          />
+
+          {/* Content Pages */}
+          {pageContents.map((page, index) => (
+            <ContentPage
+              key={index}
+              isVisible={activePageIndex === index}
+              title={page.title}
+              content={page.content}
+            />
+          ))}
           
           <EffectComposer>
             <Bloom 
